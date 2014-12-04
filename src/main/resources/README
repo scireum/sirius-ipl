@@ -17,7 +17,9 @@ Use APACHES prunmgr to install SIRIUS as a service:
 https://commons.apache.org/proper/commons-daemon/procrun.html
 
 Install service as "TestService" using 9191 as shutdown port and 1GB heap:
-prunsrv-x64 //IS//TestService --DisplayName="Test Service" --Install=prunsrv-x64.exe --Jvm=auto --StartMode=jvm --StopMode=jvm --StartClass=IPL --StartParams=start;9191 --StopClass=IPL --StopParams=stop;9191 --JvmMx=1g
+prunsrv-x64 //IS//TestService --DisplayName="Test Service" --Install=c:\install_path\prunsrv-x64.exe --Jvm=auto --StartMode=jvm --StopMode=jvm --StartClass=IPL --StartParams=start;9191 --StopClass=IPL --StopParams=stop;9191 --JvmMx=1g
+
+Use: prunmgr //ES/TestService to edit further settings (especially the stop timeout and memory settings)
 
 The application can be further configured by creating a file named instance.conf
 in the base directory (where this file is). Have a look at the main config
