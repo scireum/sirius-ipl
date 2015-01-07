@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>SIRIUS Application Template</name>
-    <description>Todo</description>
+    <description>Provides all files required to start/stop and manage a SIRIUS application</description>
     <url>http://www.sirius-lib.net</url>
     <licenses>
         <license>

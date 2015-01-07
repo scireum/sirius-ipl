@@ -7,21 +7,18 @@
  */
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.Socket;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Initial Program Load - This is the main program entry point.
  * <p>
- * This will load all provided jar files from the "libs" sub folder as well as all classes from the "classes"
+ * This will load all provided jar files from the "libs" sub folder as well as all classes from the "app"
  * folder. When debugging from an IDE, set the system property <tt>ide</tt> to <tt>true</tt> - this will
  * bypass class loading, as all classes are typically provided via the system classpath.
  * <p>
- * This class only generates a <tt>ClassLoader</tt> which is then used to load
+ * This class only generates a <tt>ClassLoader</tt> which is then used to invoke
  * <code>sirius.kernel.Sirius#initializeEnvironment(ClassLoader)</code> as stage2.
  *
  * @author Andreas Haufler (aha@scireum.de)
@@ -29,6 +26,7 @@ import java.util.List;
  */
 public class IPL {
 
+    private static final int DEFAULT_PORT = 9191;
     private static ClassLoader loader = ClassLoader.getSystemClassLoader();
 
     /**
@@ -38,7 +36,7 @@ public class IPL {
      */
     public static void main(String[] args) {
         boolean kill = Boolean.parseBoolean(System.getProperty("kill"));
-        int port = 0;
+        int port = DEFAULT_PORT;
         if (kill && System.getProperty("port") != null) {
             port = Integer.parseInt(System.getProperty("port"));
         }
@@ -49,18 +47,20 @@ public class IPL {
                 kill = true;
             }
             port = Integer.parseInt(args[1]);
-            // In case of "start", set port as system property so that Sirius will pick it up...
-            System.setProperty("port", args[1]);
+        } else if (args.length == 1) {
+            port = Integer.parseInt(args[0]);
         }
-        if (kill && port > 0) {
-            kill(port);
-        } else {
-            kickstart();
+        if (port > 0) {
+            if (kill) {
+                kill(port);
+            } else {
+                kickstart(port);
+            }
         }
     }
 
     /**
-     * Kills a sirius app by opening a connection to the lethal port.
+     * Kills an app by opening a connection to the lethal port.
      */
     private static void kill(int port) {
         try {
@@ -78,7 +78,7 @@ public class IPL {
     /*
      * Sets up a classloader and loads <tt>Sirius</tt> to initialize the framework.
      */
-    private static void kickstart() {
+    private static void kickstart(int port) {
         boolean debug = Boolean.parseBoolean(System.getProperty("debug"));
         boolean ide = Boolean.parseBoolean(System.getProperty("ide"));
         File home = new File(System.getProperty("user.dir"));
@@ -122,22 +122,46 @@ public class IPL {
         try {
             System.out.println("IPL completed - Loading Sirius as stage2...");
             System.out.println();
-            Class.forName("sirius.kernel.Sirius", true, loader)
-                    .getMethod("initializeEnvironment", ClassLoader.class)
-                    .invoke(null, loader);
+            Class.forName("sirius.kernel.Setup", true, loader)
+                 .getMethod("createAndStartEnvironment", ClassLoader.class)
+                 .invoke(null, loader);
+
+            waitForLethalConnection(port);
         } catch (Throwable e) {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Waits until a connection to the given port is made.
+     */
+    private static void waitForLethalConnection(int port) {
+        try {
+            ServerSocket socket = new ServerSocket(port);
+            System.out.printf("Opening port %d as shutdown listener%n", socket.getLocalPort());
+            try {
+                Socket client = socket.accept();
+                Class.forName("sirius.kernel.Sirius", true, loader).getMethod("stop").invoke(null);
+                client.close();
+            } finally {
+                socket.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /*
      * Enumerates all jars in the given directory
      */
     private static List<URL> allJars(File libs) throws MalformedURLException {
         List<URL> urls = new ArrayList<URL>();
-        for (File file : libs.listFiles()) {
-            if (file.getName().endsWith(".jar")) {
-                urls.add(file.toURI().toURL());
+        if (libs.listFiles() != null) {
+            for (File file : libs.listFiles()) {
+                if (file.getName().endsWith(".jar")) {
+                    urls.add(file.toURI().toURL());
+                }
             }
         }
         return urls;
