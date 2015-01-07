@@ -88,7 +88,7 @@ public class IPL {
         System.out.println("IPL from: " + home.getAbsolutePath());
 
         if (!ide) {
-            List<URL> urls = new ArrayList<URL>();
+            List<URL> urls = new ArrayList<>();
             try {
                 File jars = new File(home, "lib");
                 if (jars.exists()) {
