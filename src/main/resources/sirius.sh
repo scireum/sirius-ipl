@@ -79,7 +79,7 @@ start)
 		rm $STDOUT 
 	fi
 	echo "Starting Application..."
-   	$JAVA_CMD $JAVA_OPTS IPL >> $STDOUT $CMD_SUFFIX &
+   	$JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL >> $STDOUT $CMD_SUFFIX &
     ;;
 
 stop) 
@@ -112,7 +112,7 @@ patch)
 		rm $STDOUT
 	fi
 	echo "Starting Application..."
-   	$JAVA_CMD $JAVA_OPTS IPL >> $STDOUT $CMD_SUFFIX &
+   	$JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL >> $STDOUT $CMD_SUFFIX &
     ;;
 
 *)
