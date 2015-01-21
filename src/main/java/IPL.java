@@ -37,7 +37,7 @@ public class IPL {
     public static void main(String[] args) {
         boolean kill = Boolean.parseBoolean(System.getProperty("kill"));
         int port = DEFAULT_PORT;
-        if (kill && System.getProperty("port") != null) {
+        if (System.getProperty("port") != null) {
             port = Integer.parseInt(System.getProperty("port"));
         }
         // When we're started as windows service, the start/stop command and port are passed in
@@ -156,7 +156,7 @@ public class IPL {
      * Enumerates all jars in the given directory
      */
     private static List<URL> allJars(File libs) throws MalformedURLException {
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         if (libs.listFiles() != null) {
             for (File file : libs.listFiles()) {
                 if (file.getName().endsWith(".jar")) {
