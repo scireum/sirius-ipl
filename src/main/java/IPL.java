@@ -64,7 +64,7 @@ public class IPL {
      */
     private static void kill(int port) {
         try {
-            System.out.println("Killing localhost:" + port);
+            System.out.println("Killing localhost: " + port);
             long now = System.currentTimeMillis();
             Socket socket = new Socket("localhost", port);
             socket.getInputStream().read();
@@ -137,8 +137,8 @@ public class IPL {
      */
     private static void waitForLethalConnection(int port) {
         try {
+            System.out.printf("Opening port %d as shutdown listener%n", port);
             ServerSocket socket = new ServerSocket(port);
-            System.out.printf("Opening port %d as shutdown listener%n", socket.getLocalPort());
             try {
                 Socket client = socket.accept();
                 Class.forName("sirius.kernel.Sirius", true, loader).getMethod("stop").invoke(null);

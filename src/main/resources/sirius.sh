@@ -91,32 +91,17 @@ stop)
 restart)
     cd $SIRIUS_HOME
     echo "Stopping Application..."
-    java -Dkill=true -Dport=$SHUTDOWN_PORT IPL
+    $JAVA_CMD -Dkill=true -Dport=$SHUTDOWN_PORT IPL
 	if [ -f $STDOUT ] 
 	then 
 		rm $STDOUT 
 	fi
     echo "Starting Application..."
-    $JAVA_CMD $JAVA_OPTS IPL >> $STDOUT $CMD_SUFFIX &
+    $JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL >> $STDOUT $CMD_SUFFIX &
 	;;
 
-patch)
-    cd $SIRIUS_HOME
-    echo "Stopping Application..."
-    $JAVA_CMD -Dkill=true -Dport=$SHUTDOWN_PORT IPL
-
-    sds pull
-
-	if [ -f $STDOUT ]
-	then
-		rm $STDOUT
-	fi
-	echo "Starting Application..."
-   	$JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL >> $STDOUT $CMD_SUFFIX &
-    ;;
-
 *)
-    echo "Usage: sirius.sh start|stop|restart|patch"
+    echo "Usage: sirius.sh start|stop|restart"
     exit 1
     ;;
 
