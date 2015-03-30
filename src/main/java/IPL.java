@@ -127,8 +127,10 @@ public class IPL {
                  .invoke(null, loader);
 
             waitForLethalConnection(port);
+            System.exit(0);
         } catch (Throwable e) {
             e.printStackTrace();
+            System.exit(-1);
         }
     }
 
