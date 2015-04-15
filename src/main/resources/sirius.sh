@@ -16,7 +16,17 @@
 # not be modified, since it's part of the release.
 #
 ##############################################################################
+### BEGIN INIT INFO
+# Provides:          sirius
+# Required-Start:    $remote_fs $syslog $network
+# Required-Stop:     $remote_fs $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Starts the sirius application at boot time.
+# Description:       Enables the sirius application provided in this directory.
+### END INIT INFO
 
+echo ""
 echo "SIRIUS Launch Utility"
 echo "====================="
 echo ""
@@ -51,7 +61,7 @@ else
 fi
 
 if [ -z "$SIRIUS_HOME" ]; then
-    SIRIUS_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    SIRIUS_HOME="$(dirname "$(readlink -f "$0")")"
 fi
 
 if [ -z "$JAVA_XMX" ]; then
@@ -63,7 +73,8 @@ if [ -z "$JAVA_OPTS" ]; then
 fi
 
 echo ""
-echo "SIRIUS_HOME    $SIRIUS_HOME"
+echo "SERVICE:       $SERVICE"
+echo "SIRIUS_HOME:   $SIRIUS_HOME"
 echo "JAVA_CMD:      $JAVA_CMD"
 echo "JAVA_OPTS:     $JAVA_OPTS"
 echo "SHUTDOWN_PORT: $SHUTDOWN_PORT"
@@ -74,12 +85,8 @@ echo ""
 case "$1" in
 start)
     cd $SIRIUS_HOME
-	if [ -f $STDOUT ] 
-	then 
-		rm $STDOUT 
-	fi
 	echo "Starting Application..."
-   	$JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL >> $STDOUT $CMD_SUFFIX &
+   	$JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL &> $STDOUT $CMD_SUFFIX &
     ;;
 
 stop) 
@@ -92,16 +99,47 @@ restart)
     cd $SIRIUS_HOME
     echo "Stopping Application..."
     $JAVA_CMD -Dkill=true -Dport=$SHUTDOWN_PORT IPL
-	if [ -f $STDOUT ] 
-	then 
-		rm $STDOUT 
-	fi
     echo "Starting Application..."
-    $JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL >> $STDOUT $CMD_SUFFIX &
+    $JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL &> $STDOUT $CMD_SUFFIX &
 	;;
 
+show)
+    ps -AF | grep IPL
+    ;;
+
+logs)
+    less $SIRIUS_HOME/logs/application.log
+    ;;
+
+install)
+    if [ -z "$SERVICE" ]; then
+        echo "Please fill SERVICE in config.sh"
+        exit 1
+    fi
+
+    echo "Installing as service $SERVICE"
+    sudo ln -s $SIRIUS_HOME/sirius.sh /etc/init.d/$SERVICE
+    echo "Installing as utility $SERVICE"
+    sudo ln -s $SIRIUS_HOME/sirius.sh /usr/local/bin/$SERVICE
+    echo "Updating rc.d scripts for autostart"
+    sudo update-rc.d $SERVICE defaults
+    ;;
+
+uninstall)
+    if [ -z "$SERVICE" ]; then
+        echo "Please fill SERVICE in config.sh"
+        exit 1
+    fi
+
+    echo "Removing service $SERVICE"
+    sudo unlink /etc/init.d/$SERVICE
+    echo "Removing utility $SERVICE"
+    sudo unlink /usr/local/bin/$SERVICE
+    echo "Removing autostart"
+    sudo update-rc.d $SERVICE remove
+    ;;
 *)
-    echo "Usage: sirius.sh start|stop|restart"
+    echo "Usage: sirius.sh start|stop|restart|show|logs|install"
     exit 1
     ;;
 
