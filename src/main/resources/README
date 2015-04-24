@@ -26,7 +26,13 @@ export JAVA_JMX=1g
 
 Then use ./sirius.sh install to install as a service and utility.
 The service can then be managed by calling service <name> start|stop|restart
-or by using the utility <name> logs|show|install|uninstall
+or by using the utility <name> logs|show|install|uninstall|patch
+
+To use authbind (to access ports < 1024) do the following:
+cd /etc/authbind/byport
+touch 80
+chown USER:USER
+chmod 700 80
 
 WINDOWS
 ==============================================================================

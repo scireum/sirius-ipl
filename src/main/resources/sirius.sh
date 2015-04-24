@@ -52,16 +52,16 @@ STDOUT="logs/stdout.txt"
 # chmod 700 80
 LD_PRELOAD="/usr/lib/authbind/libauthbind.so.1"
 
-if [ -f config.sh ]
-then
+if [ -z "$SIRIUS_HOME" ]; then
+    SIRIUS_HOME="$(dirname "$(readlink -f "$0")")"
+fi
+cd $SIRIUS_HOME
+
+if [ -f config.sh ]; then
 	echo "Loading config.sh..."
 	source config.sh
 else
 	echo "Use a custom config.sh to override the settings listed below"
-fi
-
-if [ -z "$SIRIUS_HOME" ]; then
-    SIRIUS_HOME="$(dirname "$(readlink -f "$0")")"
 fi
 
 if [ -z "$JAVA_XMX" ]; then
@@ -83,25 +83,29 @@ echo "USER_ID:       $USER_ID"
 echo ""
 
 case "$1" in
-start)
-    cd $SIRIUS_HOME
-	echo "Starting Application..."
-   	$JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL &> $STDOUT $CMD_SUFFIX &
-    ;;
-
-stop) 
-    cd $SIRIUS_HOME
+stop|restart|patch)
     echo "Stopping Application..."
 	$JAVA_CMD -Dkill=true -Dport=$SHUTDOWN_PORT IPL
     ;;
 
-restart)
-    cd $SIRIUS_HOME
-    echo "Stopping Application..."
-    $JAVA_CMD -Dkill=true -Dport=$SHUTDOWN_PORT IPL
-    echo "Starting Application..."
-    $JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL &> $STDOUT $CMD_SUFFIX &
-	;;
+esac
+
+case "$1" in
+patch)
+    if [ -z "$ARTIFACT" ]; then
+        echo "Please fill ARTIFACT in config.sh"
+        exit 1
+    fi
+    $JAVA_CMD SDS pull $ARTIFACT
+    ;;
+
+esac
+
+case "$1" in
+start|restart|patch)
+	echo "Starting Application..."
+   	$JAVA_CMD $JAVA_OPTS -Dport=$SHUTDOWN_PORT IPL &> $STDOUT $CMD_SUFFIX &
+    ;;
 
 show)
     ps -AF | grep IPL | grep -v grep
@@ -138,8 +142,12 @@ uninstall)
     echo "Removing autostart"
     sudo update-rc.d $SERVICE remove
     ;;
+
+stop)
+    ;;
+
 *)
-    echo "Usage: sirius.sh start|stop|restart|show|logs|install"
+    echo "Usage: sirius.sh start|stop|restart|show|logs|install|uninstall|patch"
     exit 1
     ;;
 
