@@ -104,7 +104,7 @@ restart)
 	;;
 
 show)
-    ps -AF | grep IPL
+    ps -AF | grep IPL | grep -v grep
     ;;
 
 logs)
