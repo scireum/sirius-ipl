@@ -1,12 +1,22 @@
 # sirius-ipl
-==========
 
+This "Initial Program Load" contains a single Java main class which can be started from the IDE or via the supplied service
+scipts **sirius.sh** for Linux and **Apache prunsrv** for Windows.
 
-This is a module of the SIRIUS OpenSource project by scireum GmbH. For further information visit the project website: http://sirius-lib.net
+The **sirius-app-parent** pom automatically includes this and builds a release zip containing all required resources.
 
-## Usage 
-The assembly plugin used by S3 Ninja (https://github.com/scireum/s3ninja/blob/master/pom.xml, https://github.com/scireum/s3ninja/blob/master/src/assembly/zip.xml) can be used to find some inspiration on how to use this artifact.
-An overview of all versions can be found here: https://oss.sonatype.org/content/groups/public/com/scireum/sirius-ipl/
+This is a module of the Sirius OpenSource project by scireum GmbH. For further information visit the project website: [sirius-lib.net](http://sirius-lib.net)
+
+If you have questions or are just curious, please feel welcome to join the chat room:
+[![Join the chat at https://gitter.im/scireum/sirius-kernel](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scireum/OpenSource?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+## Usage
+
+The **sirius-app-plugin** (see https://github.com/scireum/sirius-build) uses the maven-assembly-plugin to attache the resources contained in this atrifact to the release zip. Nearly all Sirius applications also use the **IPL** class in the
+IDE to start a debugger.
+
+Consult the [README](src/main/resources/README) which is also being shipped in the root directory of the resulting zip
+on how to start / stop / install a Sirius application.
 
 ## License
 
