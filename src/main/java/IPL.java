@@ -7,7 +7,12 @@
  */
 
 import java.io.File;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,15 +24,15 @@ import java.util.List;
  * bypass class loading, as all classes are typically provided via the system classpath.
  * <p>
  * This class only generates a <tt>ClassLoader</tt> which is then used to invoke
- * <code>sirius.kernel.Sirius#initializeEnvironment(ClassLoader)</code> as stage2.
- *
- * @author Andreas Haufler (aha@scireum.de)
- * @since 2013/08
+ * {@code sirius.kernel.Sirius#initializeEnvironment(ClassLoader)} as stage2.
  */
 public class IPL {
 
     private static final int DEFAULT_PORT = 9191;
     private static ClassLoader loader = ClassLoader.getSystemClassLoader();
+
+    private IPL() {
+    }
 
     /**
      * Main Program entry point
@@ -140,19 +145,18 @@ public class IPL {
     private static void waitForLethalConnection(int port) {
         try {
             System.out.printf("Opening port %d as shutdown listener%n", port);
-            ServerSocket socket = new ServerSocket(port);
-            try {
+            try (ServerSocket socket = new ServerSocket(port, 128, InetAddress.getLocalHost())) {
                 Socket client = socket.accept();
                 Class.forName("sirius.kernel.Sirius", true, loader).getMethod("stop").invoke(null);
                 client.close();
-            } finally {
-                socket.close();
+                System.out.printf("Received lethal connection from: %s to port %d - Terminating%n",
+                                  client.getRemoteSocketAddress(),
+                                  port);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 
     /*
      * Enumerates all jars in the given directory
