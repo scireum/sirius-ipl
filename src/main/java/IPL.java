@@ -145,7 +145,7 @@ public class IPL {
     private static void waitForLethalConnection(int port) {
         try {
             System.out.printf("Opening port %d as shutdown listener%n", port);
-            try (ServerSocket socket = new ServerSocket(port, 128, InetAddress.getLocalHost())) {
+            try (ServerSocket socket = new ServerSocket(port, -1, InetAddress.getLoopbackAddress())) {
                 Socket client = socket.accept();
                 Class.forName("sirius.kernel.Sirius", true, loader).getMethod("stop").invoke(null);
                 client.close();
