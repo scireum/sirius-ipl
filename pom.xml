@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>sirius-ipl</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
 
     <name>Sirius Initial Program Load</name>
