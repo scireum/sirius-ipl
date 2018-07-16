@@ -13,8 +13,8 @@
     <version>DEVELOPMENT-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Sirius Initial Program Load</name>
-    <description>Provides all files required to start/stop and manage a Sirius application</description>
+    <name>SIRIUS ipl</name>
+    <description>Provides all files required to start/stop and manage a SIRIUS application</description>
 
     <properties>
         <skipTests>true</skipTests>

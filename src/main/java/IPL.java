@@ -26,6 +26,7 @@ import java.util.List;
  * This class only generates a <tt>ClassLoader</tt> which is then used to invoke
  * {@code sirius.kernel.Sirius#initializeEnvironment(ClassLoader)} as stage2.
  */
+@SuppressWarnings({"squid:S106", "squid:S1147", "squid:S1181", "squid:S1148"})
 public class IPL {
 
     private static final int DEFAULT_PORT = 9191;
@@ -71,9 +72,10 @@ public class IPL {
         try {
             System.out.println("Killing localhost: " + port);
             long now = System.currentTimeMillis();
-            Socket socket = new Socket("localhost", port);
-            socket.getInputStream().read();
-            System.out.println("Kill succeeded after: " + (System.currentTimeMillis() - now) + " ms");
+            try (Socket socket = new Socket("localhost", port)) {
+                socket.getInputStream().read();
+                System.out.println("Kill succeeded after: " + (System.currentTimeMillis() - now) + " ms");
+            }
         } catch (Exception e) {
             System.out.println("Kill failed: ");
             e.printStackTrace();
@@ -93,33 +95,7 @@ public class IPL {
         System.out.println("IPL from: " + home.getAbsolutePath());
 
         if (!ide) {
-            List<URL> urls = new ArrayList<>();
-            try {
-                File jars = new File(home, "lib");
-                if (jars.exists()) {
-                    for (URL url : allJars(jars)) {
-                        if (debug) {
-                            System.out.println(" - Classpath: " + url);
-                        }
-                        urls.add(url);
-                    }
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-            try {
-                File classes = new File(home, "app");
-                if (classes.exists()) {
-                    if (debug) {
-                        System.out.println(" - Classpath: " + classes.toURI().toURL());
-                    }
-                    urls.add(classes.toURI().toURL());
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-            loader = new URLClassLoader(urls.toArray(new URL[urls.size()]), loader);
-            Thread.currentThread().setContextClassLoader(loader);
+            buildAndInstallClassloader(debug, home);
         } else {
             System.out.println("IPL from IDE: not loading any classes or jars!");
         }
@@ -136,6 +112,44 @@ public class IPL {
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(-1);
+        }
+    }
+
+    private static void buildAndInstallClassloader(boolean debug, File home) {
+        List<URL> urls = new ArrayList<>();
+        try {
+            loadLibraries(debug, home, urls);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        try {
+            loadClasses(debug, home, urls);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        loader = new URLClassLoader(urls.toArray(new URL[urls.size()]), loader);
+        Thread.currentThread().setContextClassLoader(loader);
+    }
+
+    private static void loadClasses(boolean debug, File home, List<URL> urls) throws MalformedURLException {
+        File classes = new File(home, "app");
+        if (classes.exists()) {
+            if (debug) {
+                System.out.println(" - Classpath: " + classes.toURI().toURL());
+            }
+            urls.add(classes.toURI().toURL());
+        }
+    }
+
+    private static void loadLibraries(boolean debug, File home, List<URL> urls) throws MalformedURLException {
+        File jars = new File(home, "lib");
+        if (jars.exists()) {
+            for (URL url : allJars(jars)) {
+                if (debug) {
+                    System.out.println(" - Classpath: " + url);
+                }
+                urls.add(url);
+            }
         }
     }
 
