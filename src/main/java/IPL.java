@@ -7,14 +7,12 @@
  */
 
 import java.io.File;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * Initial Program Load - This is the main program entry point.
@@ -29,7 +27,6 @@ import java.util.List;
 @SuppressWarnings({"squid:S106", "squid:S1147", "squid:S1181", "squid:S1148"})
 public class IPL {
 
-    private static final int DEFAULT_PORT = 9191;
     private static ClassLoader loader = ClassLoader.getSystemClassLoader();
 
     private IPL() {
@@ -40,52 +37,7 @@ public class IPL {
      *
      * @param args currently the command line arguments are ignored.
      */
-    public static void main(String[] args) {
-        boolean kill = Boolean.parseBoolean(System.getProperty("kill"));
-        int port = DEFAULT_PORT;
-        if (System.getProperty("port") != null) {
-            port = Integer.parseInt(System.getProperty("port"));
-        }
-        // When we're started as windows service, the start/stop command and port are passed in
-        // as arguments
-        if (args.length == 2) {
-            if ("stop".equals(args[0])) {
-                kill = true;
-            }
-            port = Integer.parseInt(args[1]);
-        } else if (args.length == 1) {
-            port = Integer.parseInt(args[0]);
-        }
-        if (port > 0) {
-            if (kill) {
-                kill(port);
-            } else {
-                kickstart(port);
-            }
-        }
-    }
-
-    /**
-     * Kills an app by opening a connection to the lethal port.
-     */
-    private static void kill(int port) {
-        try {
-            System.out.println("Killing localhost: " + port);
-            long now = System.currentTimeMillis();
-            try (Socket socket = new Socket("localhost", port)) {
-                socket.getInputStream().read();
-                System.out.println("Kill succeeded after: " + (System.currentTimeMillis() - now) + " ms");
-            }
-        } catch (Exception e) {
-            System.out.println("Kill failed: ");
-            e.printStackTrace();
-        }
-    }
-
-    /*
-     * Sets up a classloader and loads <tt>Sirius</tt> to initialize the framework.
-     */
-    private static void kickstart(int port) {
+    public static void main(String[] args) throws Exception {
         boolean debug = Boolean.parseBoolean(System.getProperty("debug"));
         boolean ide = Boolean.parseBoolean(System.getProperty("ide"));
         File home = new File(System.getProperty("user.dir"));
@@ -103,11 +55,20 @@ public class IPL {
         try {
             System.out.println("IPL completed - Loading Sirius as stage2...");
             System.out.println();
+
             Class.forName("sirius.kernel.Setup", true, loader)
                  .getMethod("createAndStartEnvironment", ClassLoader.class)
                  .invoke(null, loader);
 
-            waitForLethalConnection(port);
+            Semaphore sync = new Semaphore(1);
+            sync.acquire();
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> sync.release()));
+
+            sync.acquire();
+
+            Class.forName("sirius.kernel.Sirius", true, loader).getMethod("stop").invoke(null);
+
             System.exit(0);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -150,25 +111,6 @@ public class IPL {
                 }
                 urls.add(url);
             }
-        }
-    }
-
-    /**
-     * Waits until a connection to the given port is made.
-     */
-    private static void waitForLethalConnection(int port) {
-        try {
-            System.out.printf("Opening port %d as shutdown listener%n", port);
-            try (ServerSocket socket = new ServerSocket(port, -1, InetAddress.getLoopbackAddress())) {
-                Socket client = socket.accept();
-                Class.forName("sirius.kernel.Sirius", true, loader).getMethod("stop").invoke(null);
-                client.close();
-                System.out.printf("Received lethal connection from: %s to port %d - Terminating%n",
-                                  client.getRemoteSocketAddress(),
-                                  port);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
