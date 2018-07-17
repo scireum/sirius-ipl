@@ -63,11 +63,9 @@ public class IPL {
             Semaphore sync = new Semaphore(1);
             sync.acquire();
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> sync.release()));
+            Runtime.getRuntime().addShutdownHook(new Thread(sync::release));
 
             sync.acquire();
-
-            Class.forName("sirius.kernel.Sirius", true, loader).getMethod("stop").invoke(null);
 
             System.exit(0);
         } catch (Throwable e) {
