@@ -18,9 +18,10 @@ fi
 
 if [ -z "$JAVA_OPTS" ]; then
     echo "No JAVA_OPTS present - using defaults..."
-    JAVA_OPTS="-server -Xmx$JAVA_XMX -Djava.net.preferIPv4Stack=true"
+    JAVA_OPTS="-server -Xmx$JAVA_XMX -Djava.net.preferIPv4Stack=true -Dconsole=true"
 fi
 
-echo "JAVA_OPTS:     $JAVA_OPTS"
+echo "Starting java $JAVA_OPTS IPL"
+echo ""
 echo ""
 java $JAVA_OPTS IPL
